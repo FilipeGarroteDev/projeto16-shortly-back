@@ -9,4 +9,9 @@ const newUserSchema = joi
 	})
 	.messages({ 'any.only': "the passwords don't match" });
 
-export { newUserSchema };
+const loginSchema = joi.object({
+	email: joi.string().email().required(),
+	password: joi.string().required(),
+});
+
+export { newUserSchema, loginSchema };
