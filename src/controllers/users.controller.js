@@ -1,7 +1,6 @@
 import { connection } from '../db/db.js';
 import bcrypt from 'bcrypt';
 import { loginSchema, newUserSchema } from '../schemas/usersSchema.js';
-import jwt from 'jsonwebtoken';
 import { v4 as uuid } from 'uuid';
 
 async function createUser(req, res) {
@@ -19,28 +18,31 @@ async function createUser(req, res) {
 			.status(422)
 			.send(`Ocorreram os seguintes erros no cadastro:\n${messages}`);
 	}
+	try {
+		const hasEmail = await connection.query(
+			'SELECT * FROM users WHERE email = $1',
+			[email]
+		);
 
-	const hasEmail = await connection.query(
-		'SELECT * FROM users WHERE email = $1',
-		[email]
-	);
+		if (hasEmail.rows.length > 0) {
+			return res
+				.status(409)
+				.send(
+					'Já existe um usuário com esse e-mail.\nPor gentileza, revise os campos.'
+				);
+		}
 
-	if (hasEmail.rows.length > 0) {
-		return res
-			.status(409)
-			.send(
-				'Já existe um usuário com esse e-mail.\nPor gentileza, revise os campos.'
-			);
+		const encryptedPassword = bcrypt.hashSync(password, 10);
+
+		connection.query(
+			'INSERT INTO users (name, email, password) VALUES($1, $2, $3)',
+			[name, email, encryptedPassword]
+		);
+
+		res.sendStatus(201);
+	} catch (error) {
+		return res.status(500).send(error.message);
 	}
-
-	const encryptedPassword = bcrypt.hashSync(password, 10);
-
-	connection.query(
-		'INSERT INTO users (name, email, password) VALUES($1, $2, $3)',
-		[name, email, encryptedPassword]
-	);
-
-	res.sendStatus(201);
 }
 
 async function signIn(req, res) {
@@ -76,7 +78,10 @@ async function signIn(req, res) {
 				);
 		}
 
-		connection.query('INSERT INTO sessions (token) VALUES($1)', [token]);
+		connection.query('INSERT INTO sessions (token, "userId") VALUES($1, $2)', [
+			token,
+			user.rows[0].id,
+		]);
 		return res.status(200).send({ token });
 	} catch (error) {
 		return res.status(500).send(error.message);
