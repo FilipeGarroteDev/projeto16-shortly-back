@@ -2,7 +2,6 @@ import { connection } from '../db/db.js';
 
 async function tokenValidation(req, res, next) {
 	const token = req.headers.authorization?.replace('Bearer ', '');
-	console.log(token);
 
 	try {
 		const user = await connection.query(

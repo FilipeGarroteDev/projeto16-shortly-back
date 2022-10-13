@@ -19,7 +19,7 @@ async function shortenUrl(req, res) {
 		const shortUrl = nanoid();
 		const { user } = res.locals;
 
-		connection.query(
+		await connection.query(
 			'INSERT INTO links ("userId", url, "shortUrl") VALUES($1, $2, $3)',
 			[user.rows[0].userId, url, shortUrl]
 		);
@@ -27,4 +27,21 @@ async function shortenUrl(req, res) {
 	} catch (error) {}
 }
 
-export { shortenUrl };
+async function selectUrl(req, res) {
+	const { id } = req.params;
+
+	if (isNaN(id)) return res.sendStatus(404);
+
+	try {
+		const link = await connection.query(
+			`SELECT id, "shortUrl", url FROM links WHERE id = $1`,
+			[Number(id)]
+		);
+
+		if (link.rows.length === 0 || isNaN(id)) return res.sendStatus(404);
+
+		return res.status(200).send(link.rows[0]);
+	} catch (error) {}
+}
+
+export { shortenUrl, selectUrl };

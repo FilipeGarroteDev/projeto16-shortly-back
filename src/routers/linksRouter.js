@@ -5,5 +5,6 @@ import { tokenValidation } from '../middlewares/tokenValidationMiddleware.js';
 const router = express();
 
 router.post('/urls/shorten', tokenValidation, linksController.shortenUrl);
+router.get('/urls/:id', linksController.selectUrl);
 
 export default router;
