@@ -17,7 +17,7 @@ async function tokenValidation(req, res, next) {
 				);
 		}
 
-		res.locals.user = user;
+		res.locals.user = user.rows[0];
 		next();
 	} catch (error) {
 		res.status(500).send(error.message);

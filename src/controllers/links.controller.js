@@ -21,7 +21,7 @@ async function shortenUrl(req, res) {
 
 		await connection.query(
 			'INSERT INTO links ("userId", url, "shortUrl") VALUES($1, $2, $3)',
-			[user.rows[0].userId, url, shortUrl]
+			[user.userId, url, shortUrl]
 		);
 		return res.status(201).send({ shortUrl });
 	} catch (error) {}
@@ -71,4 +71,37 @@ async function linkRedirect(req, res) {
 	}
 }
 
-export { shortenUrl, selectUrl, linkRedirect };
+async function deleteLink(req, res) {
+	const { id } = req.params;
+	const { user } = res.locals;
+
+	if (isNaN(id)) {
+		return res.status(404).send('O id informado possui formato inválido.');
+	}
+	try {
+		const link = await connection.query('SELECT * FROM links WHERE id = $1', [
+			Number(id),
+		]);
+		if (link.rows.length === 0) {
+			return res
+				.status(404)
+				.send(
+					'Não foi encontrado nenhum link com o id informado. Por gentileza, revise os dados.'
+				);
+		}
+		if (link.rows[0].userId !== user.userId) {
+			return res
+				.status(401)
+				.send(
+					'A url indicada não pertence ao usuário logado e, portanto, não pode ser deletada.'
+				);
+		}
+
+		connection.query('DELETE FROM links WHERE id = $1', [Number(id)]);
+		return res.sendStatus(204);
+	} catch (error) {
+		return res.status(500).send(error.message);
+	}
+}
+
+export { shortenUrl, selectUrl, linkRedirect, deleteLink };
