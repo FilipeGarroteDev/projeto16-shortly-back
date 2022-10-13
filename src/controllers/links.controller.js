@@ -44,4 +44,31 @@ async function selectUrl(req, res) {
 	} catch (error) {}
 }
 
-export { shortenUrl, selectUrl };
+async function linkRedirect(req, res) {
+	const { shortUrl } = req.params;
+
+	try {
+		const link = await connection.query(
+			'SELECT id, url FROM links WHERE "shortUrl" = $1',
+			[shortUrl]
+		);
+
+		if (link.rows.length === 0) {
+			return res
+				.status(404)
+				.send(
+					'Esse link não existe. Por gentileza, verifique o valor inserido e refaça a operação.'
+				);
+		}
+
+		connection.query('INSERT INTO visits ("linkId") VALUES ($1)', [
+			link.rows[0].id,
+		]);
+
+		return res.redirect(link.rows[0].url);
+	} catch (error) {
+		return res.status(500).send(error.message);
+	}
+}
+
+export { shortenUrl, selectUrl, linkRedirect };
