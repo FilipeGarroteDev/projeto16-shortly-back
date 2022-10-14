@@ -5,5 +5,6 @@ import { tokenValidation } from '../middlewares/tokenValidationMiddleware.js';
 const router = express();
 
 router.get('/users/me', tokenValidation, usersController.getUserHistoric);
+router.get('/ranking', usersController.usersRanking);
 
 export default router;
