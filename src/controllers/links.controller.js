@@ -21,7 +21,7 @@ async function shortenUrl(req, res) {
 
 		await connection.query(
 			'INSERT INTO links ("userId", url, "shortUrl") VALUES($1, $2, $3)',
-			[user.userId, url, shortUrl]
+			[user.id, url, shortUrl]
 		);
 		return res.status(201).send({ shortUrl });
 	} catch (error) {}
@@ -61,9 +61,10 @@ async function linkRedirect(req, res) {
 				);
 		}
 
-		connection.query('INSERT INTO visits ("linkId") VALUES ($1)', [
-			link.rows[0].id,
-		]);
+		connection.query(
+			'UPDATE links SET "visitCount" = "visitCount" + 1 WHERE id = $1',
+			[link.rows[0].id]
+		);
 
 		return res.redirect(link.rows[0].url);
 	} catch (error) {
@@ -89,7 +90,7 @@ async function deleteLink(req, res) {
 					'Não foi encontrado nenhum link com o id informado. Por gentileza, revise os dados.'
 				);
 		}
-		if (link.rows[0].userId !== user.userId) {
+		if (link.rows[0].userId !== user.id) {
 			return res
 				.status(401)
 				.send(
