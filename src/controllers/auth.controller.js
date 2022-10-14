@@ -1,23 +1,10 @@
 import { connection } from '../db/db.js';
 import bcrypt from 'bcrypt';
-import { loginSchema, newUserSchema } from '../schemas/usersSchema.js';
 import { v4 as uuid } from 'uuid';
 
 async function createUser(req, res) {
 	const { name, email, password } = req.body;
-	const validation = newUserSchema.validate(req.body, {
-		abortEarly: false,
-	});
 
-	if (validation.error) {
-		const messages = validation.error.details
-			.map((error) => error.message)
-			.join('\n');
-
-		return res
-			.status(422)
-			.send(`Ocorreram os seguintes erros no cadastro:\n${messages}`);
-	}
 	try {
 		const hasEmail = await connection.query(
 			'SELECT * FROM users WHERE email = $1',
@@ -48,17 +35,6 @@ async function createUser(req, res) {
 async function signIn(req, res) {
 	const { email, password } = req.body;
 	const token = uuid();
-	const validation = loginSchema.validate(req.body);
-
-	if (validation.error) {
-		const messages = validation.error.details
-			.map((error) => error.message)
-			.join('\n');
-
-		return res
-			.status(422)
-			.send(`Ocorreram os seguintes erros no login:\n${messages}`);
-	}
 
 	try {
 		const user = await connection.query(
