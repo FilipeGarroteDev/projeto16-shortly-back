@@ -6,11 +6,11 @@ async function shortenUrl(req, res) {
 		const nanoid = customAlphabet('1234567890abcdef', 8);
 		const { url } = req.body;
 		const shortUrl = nanoid();
-		const { user } = res.locals;
+		const { userId } = res.locals;
 
 		await connection.query(
 			'INSERT INTO links ("userId", url, "shortUrl") VALUES($1, $2, $3)',
-			[user.id, url, shortUrl]
+			[userId, url, shortUrl]
 		);
 		return res.status(201).send({ shortUrl });
 	} catch (error) {}
@@ -63,7 +63,7 @@ async function linkRedirect(req, res) {
 
 async function deleteLink(req, res) {
 	const { id } = req.params;
-	const { user } = res.locals;
+	const { userId } = res.locals;
 
 	if (isNaN(id)) {
 		return res.status(404).send('O id informado possui formato inválido.');
@@ -79,7 +79,7 @@ async function deleteLink(req, res) {
 					'Não foi encontrado nenhum link com o id informado. Por gentileza, revise os dados.'
 				);
 		}
-		if (link.rows[0].userId !== user.id) {
+		if (link.rows[0].userId !== userId) {
 			return res
 				.status(401)
 				.send(

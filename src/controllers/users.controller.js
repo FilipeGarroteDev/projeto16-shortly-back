@@ -1,7 +1,7 @@
 import { connection } from '../db/db.js';
 
 async function getUserHistoric(req, res) {
-	const { user } = res.locals;
+	const { userId } = res.locals;
 
 	try {
 		const historic = await connection.query(
@@ -17,7 +17,7 @@ async function getUserHistoric(req, res) {
       WHERE users.id = $1
       GROUP BY users.id
     `,
-			[user.id]
+			[userId]
 		);
 
 		return res.status(200).send(historic.rows[0]);

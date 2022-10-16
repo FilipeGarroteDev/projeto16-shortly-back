@@ -1,6 +1,6 @@
 import { connection } from '../db/db.js';
 import bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
+import jwt from 'jsonwebtoken';
 
 async function createUser(req, res) {
 	const { name, email, password } = req.body;
@@ -34,7 +34,6 @@ async function createUser(req, res) {
 
 async function signIn(req, res) {
 	const { email, password } = req.body;
-	const token = uuid();
 
 	try {
 		const user = await connection.query(
@@ -53,6 +52,14 @@ async function signIn(req, res) {
 					'E-mail e/ou senha estão incorretos.\nPor gentileza, revise os dados'
 				);
 		}
+
+		const token = jwt.sign(
+			{
+				userId: user.rows[0].id,
+			},
+			process.env.TOKEN_SECRET,
+			{ expiresIn: 60 * 10 }
+		);
 
 		connection.query('INSERT INTO sessions (token, "userId") VALUES($1, $2)', [
 			token,
