@@ -1,15 +1,12 @@
-import { connection } from '../db/db.js';
 import jwt from 'jsonwebtoken';
+import * as authRepository from '../repositories/authRepository.js';
 
 async function tokenValidation(req, res, next) {
 	const token = req.headers.authorization?.replace('Bearer ', '');
 	let userId;
 
 	try {
-		const session = await connection.query(
-			'SELECT * FROM sessions WHERE token = $1',
-			[token]
-		);
+		const session = await authRepository.searchActiveSession(token);
 
 		if (!token || session.rows.length === 0) {
 			return res
@@ -26,9 +23,7 @@ async function tokenValidation(req, res, next) {
 				.send('O token de autenticação está expirado.\nFavor, refaça o login.');
 		}
 
-		const user = await connection.query('SELECT * FROM users WHERE id = $1', [
-			userId,
-		]);
+		const user = await authRepository.searchUserById(userId);
 
 		if (user.rows.length === 0) {
 			return res

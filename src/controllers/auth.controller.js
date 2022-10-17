@@ -1,15 +1,12 @@
-import { connection } from '../db/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import * as authRepository from '../repositories/authRepository.js';
 
 async function createUser(req, res) {
 	const { name, email, password } = req.body;
 
 	try {
-		const hasEmail = await connection.query(
-			'SELECT * FROM users WHERE email = $1',
-			[email]
-		);
+		const hasEmail = await authRepository.searchEmail(email);
 
 		if (hasEmail.rows.length > 0) {
 			return res
@@ -21,10 +18,7 @@ async function createUser(req, res) {
 
 		const encryptedPassword = bcrypt.hashSync(password, 10);
 
-		connection.query(
-			'INSERT INTO users (name, email, password) VALUES($1, $2, $3)',
-			[name, email, encryptedPassword]
-		);
+		authRepository.createUser(name, email, encryptedPassword);
 
 		res.sendStatus(201);
 	} catch (error) {
@@ -36,10 +30,7 @@ async function signIn(req, res) {
 	const { email, password } = req.body;
 
 	try {
-		const user = await connection.query(
-			'SELECT * FROM users WHERE email = $1',
-			[email]
-		);
+		const user = await authRepository.searchUserByEmail(email);
 		const isValidPassword = bcrypt.compareSync(
 			password,
 			user.rows.length === 0 ? '' : user.rows[0].password
@@ -61,10 +52,8 @@ async function signIn(req, res) {
 			{ expiresIn: 60 * 10 }
 		);
 
-		connection.query('INSERT INTO sessions (token, "userId") VALUES($1, $2)', [
-			token,
-			user.rows[0].id,
-		]);
+		authRepository.login(token, user.rows[0].id);
+
 		return res.status(200).send({ token });
 	} catch (error) {
 		return res.status(500).send(error.message);

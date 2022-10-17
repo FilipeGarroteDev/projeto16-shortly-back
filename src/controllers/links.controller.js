@@ -1,5 +1,5 @@
-import { connection } from '../db/db.js';
 import { customAlphabet } from 'nanoid';
+import * as linksRepository from '../repositories/linksRepository.js';
 
 async function shortenUrl(req, res) {
 	try {
@@ -8,10 +8,7 @@ async function shortenUrl(req, res) {
 		const shortUrl = nanoid();
 		const { userId } = res.locals;
 
-		await connection.query(
-			'INSERT INTO links ("userId", url, "shortUrl") VALUES($1, $2, $3)',
-			[userId, url, shortUrl]
-		);
+		await linksRepository.creatShortUrl(userId, url, shortUrl);
 		return res.status(201).send({ shortUrl });
 	} catch (error) {
 		return res.status(500).send(error.message);
@@ -24,10 +21,7 @@ async function selectUrl(req, res) {
 	if (isNaN(id)) return res.sendStatus(404);
 
 	try {
-		const link = await connection.query(
-			`SELECT id, "shortUrl", url FROM links WHERE id = $1`,
-			[Number(id)]
-		);
+		const link = await linksRepository.searchUrlById(Number(id));
 
 		if (link.rows.length === 0 || isNaN(id)) return res.sendStatus(404);
 
@@ -39,10 +33,7 @@ async function linkRedirect(req, res) {
 	const { shortUrl } = req.params;
 
 	try {
-		const link = await connection.query(
-			'SELECT id, url FROM links WHERE "shortUrl" = $1',
-			[shortUrl]
-		);
+		const link = await linksRepository.searchUrlByLink(shortUrl);
 
 		if (link.rows.length === 0) {
 			return res
@@ -52,10 +43,7 @@ async function linkRedirect(req, res) {
 				);
 		}
 
-		connection.query(
-			'UPDATE links SET "visitCount" = "visitCount" + 1 WHERE id = $1',
-			[link.rows[0].id]
-		);
+		linksRepository.updateVisitCount(link.rows[0].id);
 
 		return res.redirect(link.rows[0].url);
 	} catch (error) {
@@ -71,9 +59,7 @@ async function deleteLink(req, res) {
 		return res.status(404).send('O id informado possui formato inválido.');
 	}
 	try {
-		const link = await connection.query('SELECT * FROM links WHERE id = $1', [
-			Number(id),
-		]);
+		const link = await linksRepository.searchUrlById(Number(id));
 		if (link.rows.length === 0) {
 			return res
 				.status(404)
@@ -89,7 +75,7 @@ async function deleteLink(req, res) {
 				);
 		}
 
-		connection.query('DELETE FROM links WHERE id = $1', [Number(id)]);
+		linksRepository.deleteLink(Number(id));
 		return res.sendStatus(204);
 	} catch (error) {
 		return res.status(500).send(error.message);

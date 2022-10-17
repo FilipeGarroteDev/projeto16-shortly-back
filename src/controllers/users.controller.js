@@ -1,27 +1,10 @@
-import { connection } from '../db/db.js';
+import * as usersRepository from '../repositories/usersRepository.js';
 
 async function getUserHistoric(req, res) {
 	const { userId } = res.locals;
 
 	try {
-		const historic = await connection.query(
-			`
-      SELECT 
-        users.id,
-        users.name,
-        COALESCE(SUM(links."visitCount"), 0) AS "visitCount",
-        CASE
-          WHEN SUM(links."visitCount") IS NULL THEN json_build_array()                                                                                                                                             WHEN SUM(links."visitCount") IS NULL THEN NULL
-          ELSE json_agg(json_build_object('id', links.id, 'shortUrl', links."shortUrl", 'url', links.url, 'visitCount', links."visitCount"))
-        END AS "shortenedUrls"
-      FROM users
-      LEFT JOIN links
-        ON users.id = links."userId"
-      WHERE users.id = $1
-      GROUP BY users.id
-    `,
-			[userId]
-		);
+		const historic = await usersRepository.getHistoric(userId);
 		historic.rows[0].visitCount = Number(historic.rows[0].visitCount);
 		return res.status(200).send(historic.rows[0]);
 	} catch (error) {
@@ -31,20 +14,7 @@ async function getUserHistoric(req, res) {
 
 async function usersRanking(req, res) {
 	try {
-		const ranking = await connection.query(`
-      SELECT
-        users.id,
-        users.name,
-        COUNT(links."userId") AS "linksCount",
-        COALESCE(SUM(links."visitCount"), 0) AS "visitCount"
-      FROM users
-      LEFT JOIN links
-        ON users.id = links."userId"
-      GROUP BY users.id
-      ORDER BY "visitCount" DESC, "linksCount" DESC
-      LIMIT 10; 
-    `);
-
+		const ranking = await usersRepository.getRanking();
 		return res.status(200).send(ranking.rows);
 	} catch (error) {
 		return res.status(500).send(error.message);
