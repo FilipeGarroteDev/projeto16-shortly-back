@@ -49,7 +49,7 @@ async function signIn(req, res) {
 				userId: user.rows[0].id,
 			},
 			process.env.TOKEN_SECRET,
-			{ expiresIn: 60 * 10 }
+			{ expiresIn: 60 * 30 }
 		);
 
 		authRepository.login(token, user.rows[0].id);
