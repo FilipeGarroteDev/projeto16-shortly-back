@@ -10,15 +10,12 @@ async function getUserHistoric(req, res) {
         users.id,
         users.name,
         COALESCE(SUM(links."visitCount"), 0) AS "visitCount",
-        CASE
-          WHEN "visitCount" IS NULL THEN json_build_array()
-          ELSE json_build_array(json_build_object('id', links.id, 'shortUrl', links."shortUrl", 'url', links.url, 'visitCount', links."visitCount"))
-        END AS "shortenedUrls"
+        json_agg(json_build_object('id', links.id, 'shortUrl', links."shortUrl", 'url', links.url, 'visitCount', links."visitCount")) AS "shortenedUrls"
       FROM users
       LEFT JOIN links
         ON users.id = links."userId"
       WHERE users.id = $1
-      GROUP BY users.id, links."id"
+      GROUP BY users.id
     `,
 			[userId]
 		);
