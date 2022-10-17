@@ -45,7 +45,10 @@ async function linkRedirect(req, res) {
 
 		linksRepository.updateVisitCount(link.rows[0].id);
 
-		return res.redirect(link.rows[0].url);
+		const host = link.rows[0].url
+			.replace('http://', 'https://')
+			.replace('https://', '');
+		return res.redirect(`https://${host}`);
 	} catch (error) {
 		return res.status(500).send(error.message);
 	}
