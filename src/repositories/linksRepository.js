@@ -31,10 +31,15 @@ async function deleteLink(id) {
 	return connection.query('DELETE FROM links WHERE id = $1', [id]);
 }
 
+async function searchCompleteUrl(id) {
+	return connection.query(`SELECT * FROM links WHERE id = $1`, [id]);
+}
+
 export {
 	searchUrlById,
 	creatShortUrl,
 	searchUrlByLink,
 	updateVisitCount,
 	deleteLink,
+	searchCompleteUrl,
 };
