@@ -58,6 +58,8 @@ async function deleteLink(req, res) {
 	const { id } = req.params;
 	const { userId } = res.locals;
 
+	console.log({ delet: userId });
+
 	if (isNaN(id)) {
 		return res.status(404).send('O id informado possui formato inválido.');
 	}
@@ -70,6 +72,8 @@ async function deleteLink(req, res) {
 					'Não foi encontrado nenhum link com o id informado. Por gentileza, revise os dados.'
 				);
 		}
+		console.log({ delet: userId, userIdLink: link.rows[0].userId });
+
 		if (link.rows[0].userId !== userId) {
 			return res
 				.status(401)

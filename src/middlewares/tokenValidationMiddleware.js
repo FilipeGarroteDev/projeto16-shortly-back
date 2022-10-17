@@ -17,6 +17,9 @@ async function tokenValidation(req, res, next) {
 		try {
 			const verifiedToken = jwt.verify(token, process.env.TOKEN_SECRET);
 			userId = verifiedToken.userId;
+
+			console.log(userId);
+			console.log(verifiedToken);
 		} catch (error) {
 			return res
 				.status(401)
@@ -30,6 +33,8 @@ async function tokenValidation(req, res, next) {
 				.status(404)
 				.send('Esse usuário não existe. Por favor, revise os dados.');
 		}
+
+		console.log(userId);
 
 		res.locals.userId = userId;
 		next();
