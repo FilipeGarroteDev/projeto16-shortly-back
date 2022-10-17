@@ -15,7 +15,7 @@ async function getUserHistoric(req, res) {
           ELSE json_agg(json_build_object('id', links.id, 'shortUrl', links."shortUrl", 'url', links.url, 'visitCount', links."visitCount"))
         END AS "shortenedUrls"
       FROM users
-      LEFT JOIN links
+      JOIN links
         ON users.id = links."userId"
       WHERE users.id = $1
       GROUP BY users.id, links."visitCount"
