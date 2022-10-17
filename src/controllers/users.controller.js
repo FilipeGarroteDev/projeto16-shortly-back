@@ -33,12 +33,12 @@ async function usersRanking(req, res) {
         users.id,
         users.name,
         COUNT(links."userId") AS "linksCount",
-        SUM(links."visitCount") AS "visitCount"
+        COALESCE(SUM(links."visitCount"), 0) AS "visitCount"
       FROM users
       LEFT JOIN links
         ON users.id = links."userId"
       GROUP BY users.id
-      ORDER BY "visitCount" DESC
+      ORDER BY "visitCount" DESC, "linksCount" DESC
       LIMIT 10; 
     `);
 

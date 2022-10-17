@@ -13,7 +13,9 @@ async function shortenUrl(req, res) {
 			[userId, url, shortUrl]
 		);
 		return res.status(201).send({ shortUrl });
-	} catch (error) {}
+	} catch (error) {
+		return res.status(500).send(error.message);
+	}
 }
 
 async function selectUrl(req, res) {
