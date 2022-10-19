@@ -18,7 +18,11 @@ async function createUser(req, res) {
 
 		const encryptedPassword = bcrypt.hashSync(password, 10);
 
-		const teste = authRepository.createUser(name, email, encryptedPassword);
+		const teste = await authRepository.createUser(
+			name,
+			email,
+			encryptedPassword
+		);
 
 		res.status(201).send(teste);
 	} catch (error) {
